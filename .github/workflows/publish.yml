@@ -1,0 +1,55 @@
+name: Publish
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  verify:
+    name: Verify tag
+    runs-on: ubuntu-latest
+
+    outputs:
+      valid: ${{ steps.check-tag.outputs.valid }}
+
+    steps:
+      - name: Check Tag
+        id: check-tag
+        run: |
+          if [[ ${{ github.ref }} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "valid=true" >> $GITHUB_OUTPUT
+          fi
+
+  publish:
+    if: needs.verify.outputs.valid == 'true'
+    name: Release
+    runs-on: ubuntu-latest
+    needs: verify
+
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v3
+
+      - name: Get tag
+        id: meta
+        run: |
+          TAG=$(echo $GITHUB_REF | cut -d / -f 3)
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: true
+          build-args: |
+            VERSION=${{ steps.meta.outputs.tag }}
+          tags: |
+            ghcr.io/khulnasoft-lab/rproxy:latest
+            ghcr.io/khulnasoft-lab/rproxy:${{ steps.meta.outputs.tag }}
