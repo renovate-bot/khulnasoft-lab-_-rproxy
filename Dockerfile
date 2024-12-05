@@ -1,4 +1,4 @@
-FROM golang:1.22.1-alpine3.19 AS base
+FROM golang:1.23.4-alpine3.19 AS base
 
 RUN apk --update upgrade && apk --no-cache --update-cache --upgrade --latest add ca-certificates build-base gcc
 
