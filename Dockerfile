@@ -20,7 +20,7 @@ RUN go build  \
     -ldflags="-X main.version=${VERSION}" \
     -o /usr/bin/rproxy
 
-FROM alpine:3.16
+FROM alpine:3.21
 
 RUN addgroup -S rproxy; \
     adduser -S rproxy -G rproxy -D -u 10000 -s /bin/nologin;
